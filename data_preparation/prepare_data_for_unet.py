@@ -122,3 +122,8 @@ if __name__ == "__main__":
                 
                 imageio.imwrite(os.path.join(pfolder, image_filename), epi_image_record[n_slices])
                 imageio.imwrite(os.path.join(pfolder, mask_filename), epi_label_record[n_slices])
+                
+                #print(epi_image_record[n_slices].shape)
+                #break
+            #break
+        #break

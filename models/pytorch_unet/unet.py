@@ -58,6 +58,7 @@ def pad_sample(x):
 def resize_sample(x, size=256):
     volume, mask = x
     v_shape = volume.shape
+    
     out_shape = (v_shape[0], size, size)
     mask = resize(
         mask,
@@ -91,7 +92,8 @@ def normalize_volume(volume):
 class BrainSegmentationDataset(Dataset):
     """Brain MRI dataset for FLAIR abnormality segmentation"""
 
-    in_channels = 3
+    #in_channels = 3
+    in_channels = 1
     out_channels = 1
 
     def __init__(
@@ -123,16 +125,19 @@ class BrainSegmentationDataset(Dataset):
                 filepath = os.path.join(dirpath, filename)
                 
                 if "mask" in filename:
-                    mask_slices.append(imread(filepath, as_gray=True))
+                    mask_slices.append(imread(filepath, as_gray=True)*255)
                 else:
-                    image_slices.append(imread(filepath))
+                    if self.in_channels == 1:
+                        image_slices.append(np.expand_dims(imread(filepath), axis=-1))
+                    else:
+                        image_slices.append(imread(filepath))
             if len(image_slices) > 0:
                 patient_id = dirpath.split("/")[-1]
                 volumes[patient_id] = np.array(image_slices[1:-1])
                 masks[patient_id] = np.array(mask_slices[1:-1])
 
         self.patients = sorted(volumes)
-
+                
         # select cases to subset
         if not subset == "all":
             random.seed(seed)
@@ -309,7 +314,8 @@ class HorizontalFlip(object):
 
 class UNet(nn.Module):
 
-    def __init__(self, in_channels=3, out_channels=1, init_features=32):
+    #def __init__(self, in_channels=3, out_channels=1, init_features=32):
+    def __init__(self, in_channels=1, out_channels=1, init_features=32):
         super(UNet, self).__init__()
 
         features = init_features
@@ -451,7 +457,7 @@ def outline(image, mask, color):
 
 
 def data_loaders(batch_size, workers, image_size, aug_scale, aug_angle):
-    dataset_train, dataset_valid = datasets("../data", image_size, aug_scale, aug_angle)
+    dataset_train, dataset_valid = datasets("../data_test_run", image_size, aug_scale, aug_angle)
 
     def worker_init(worker_id):
         np.random.seed(42 + worker_id)
@@ -491,11 +497,20 @@ def datasets(images, image_size, aug_scale, aug_angle):
     return train, valid
 
 
+"""
 def dsc(y_pred, y_true):
     y_pred = np.round(y_pred).astype(int)
     y_true = np.round(y_true).astype(int)
     return np.sum(y_pred[y_true == 1]) * 2.0 / (np.sum(y_pred) + np.sum(y_true))
-
+"""
+def dsc(y_pred, y_true):
+    smooth = 1.
+    product = np.multiply(y_pred, y_true)
+    intersection = np.sum(product)
+    coefficient = (2.*intersection +smooth) / (np.sum(y_pred)+np.sum(y_true) +smooth)
+    loss = 1. - coefficient
+    # or "-coefficient"
+    return(loss)
 
 def dsc_distribution(volumes):
     dsc_dict = {}
@@ -565,10 +580,13 @@ def plot_dsc(dsc_dist):
     return np.fromstring(s, np.uint8).reshape((height, width, 4))
 
 
-batch_size = 16
+#batch_size = 16
+batch_size = 8
 epochs = 50
-lr = 0.0001
-workers = 2
+#lr = 0.0001
+lr = 0.001
+#workers = 2
+workers = 0
 weights = "./"
 image_size = 224
 aug_scale = 0.05
@@ -583,6 +601,10 @@ def train_validate():
     
     unet = UNet(in_channels=BrainSegmentationDataset.in_channels, out_channels=BrainSegmentationDataset.out_channels)
     unet.to(device)
+    
+    # continue training
+    state_dict = torch.load(os.path.join(weights, "unet.pt"))
+    unet.load_state_dict(state_dict)
     
     dsc_loss = DiceLoss()
     best_validation_dsc = 0.0
@@ -687,7 +709,7 @@ def train_validate():
 
     dsc_dist_plot = plot_dsc(dsc_dist)
     imsave("./dsc.png", dsc_dist_plot)
-
+    
     for p in volumes:
         x = volumes[p][0]
         y_pred = volumes[p][1]
