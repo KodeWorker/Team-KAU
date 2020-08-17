@@ -1,6 +1,7 @@
 import os
 import glob
 import zipfile
+from tqdm import tqdm
 from argparse import ArgumentParser
 
 def build_argparser():
@@ -19,6 +20,6 @@ if __name__ == "__main__":
     
     filepaths = glob.glob(data_dir + "\*.zip")
     
-    for filepath in filepaths:
+    for filepath in tqdm(filepaths):
         with zipfile.ZipFile(filepath, 'r') as zip_ref:
             zip_ref.extractall(extract_dir)
