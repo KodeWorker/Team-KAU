@@ -5,6 +5,17 @@ import nibabel as nib
 from tqdm import trange
 from PIL import Image
 from preprocessing import normalization, stack_channels, pad_and_resize, resample
+from argparse import ArgumentParser
+
+def build_argparser():
+    parser = ArgumentParser()
+    parser.add_argument("-s", "--source", help="source directory for *.nii.gz files.",
+                        required=True, type=str)
+    parser.add_argument("-t", "--target", help="target directory for pasrsed images and masks.", 
+                        required=True, type=str)
+    parser.add_argument("--image_size", help="image size", 
+                        required=True, default=512, type=int)
+    return parser
 
 class DataPreparation(object):
     
@@ -23,11 +34,11 @@ class DataPreparation(object):
             print("Data Preparation: {}".format(fold))
             
             if fold == "train":
-                images = glob.glob(os.path.join(self.data_dir, fold) + "\image\*.nii.gz")
-                labels = glob.glob(os.path.join(self.data_dir, fold) + "\label\*.nii.gz")
+                images = glob.glob(os.path.join(self.data_dir, fold) + "/image/*.nii.gz")
+                labels = glob.glob(os.path.join(self.data_dir, fold) + "/label/*.nii.gz")
             elif fold == "validation":
-                images = glob.glob(os.path.join(self.data_dir, fold) + "\*\image\*.nii.gz")
-                labels = glob.glob(os.path.join(self.data_dir, fold) + "\*\label\*.nii.gz")
+                images = glob.glob(os.path.join(self.data_dir, fold) + "/*/image/*.nii.gz")
+                labels = glob.glob(os.path.join(self.data_dir, fold) + "/*/label/*.nii.gz")
             
             output_dir = os.path.join(self.output_dir, fold)
             
@@ -88,10 +99,12 @@ class DataPreparation(object):
             if is_test: break
 
 if __name__ == "__main__":
-    data_dir = r"D:\Datasets\Brain Tumor Segmentation Challenge\data"
-    output_dir = r"../data/demo2"
-    image_size = 512
+    args = build_argparser().parse_args()
+
+    data_dir = args.source
+    output_dir = args.target
+    image_size = args.image_size
     
-    DataPreparation(data_dir, output_dir, image_size, export_ext="png", preprocess=[resample, stack_channels, normalization, pad_and_resize]).run(is_test=True)
+    DataPreparation(data_dir, output_dir, image_size, export_ext="png", preprocess=[resample, stack_channels, normalization, pad_and_resize]).run()
     
     
