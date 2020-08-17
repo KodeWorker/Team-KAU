@@ -14,7 +14,6 @@ def log_loss_summary(loss, step, prefix=""):
 def log_scalar_summary(tag, value, step):
     print("epoch {} | {}: {}".format(step + 1, tag, value))
 
-#!
 def dsc(y_pred, y_true, smooth=1):
     y_pred = np.round(y_pred).astype(int)
     y_true = np.round(y_true).astype(int)
@@ -128,6 +127,7 @@ if __name__ == "__main__":
                     dsc(validation_pred, validation_true)
                 )
                 log_scalar_summary("val_dsc", mean_dsc, epoch)
+                log_scalar_summary("best_dsc", best_validation_dsc, epoch)
                 if mean_dsc > best_validation_dsc:
                     best_validation_dsc = mean_dsc
                     torch.save(unet.state_dict(), os.path.join(weights, "unet_best_epoch{}.pt".format(epoch+1)))
