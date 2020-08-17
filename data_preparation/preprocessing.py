@@ -91,8 +91,8 @@ def resample(epi_image_data, epi_label_data, pixdims):
         image = epi_image_data[..., n_slice]
         label = epi_label_data[..., n_slice]
         
-        resize_image = cv2.resize(image, (image_new_h, image_new_w), cv2.INTER_CUBIC)
-        resize_label = cv2.resize(label, (label_new_h, label_new_w), cv2.INTER_CUBIC)
+        resize_image = cv2.resize(image, (image_new_w, image_new_h), cv2.INTER_CUBIC)
+        resize_label = cv2.resize(label, (label_new_w, label_new_h), cv2.INTER_CUBIC)
         
         image_data[...,n_slice] = resize_image
         label_data[...,n_slice] = resize_label
