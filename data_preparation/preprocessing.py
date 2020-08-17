@@ -68,3 +68,22 @@ def pad_and_resize(epi_image_data, epi_label_data, image_size):
         label_data[..., n_slice] = resize_label
     
     return image_data, label_data
+
+def resample(epi_image_data, epi_label_data, pixdim):
+    new_h = int(pixdim[1] * epi_image_data.shape[0])
+    new_w = int(pixdim[2] * epi_image_data.shape[1])
+    
+    image_data = np.zeros((new_h, new_w, epi_image_data.shape[-1]), dtype=np.uint8)
+    label_data = np.zeros((new_h, new_w, epi_image_data.shape[-1]), dtype=np.uint8)
+    
+    for n_slice in range(epi_image_data.shape[-1]):
+        image = epi_image_data[..., n_slice]
+        label = epi_label_data[..., n_slice]
+        
+        resize_image = cv2.resize(image, (new_h, new_w), cv2.INTER_CUBIC)
+        resize_label = cv2.resize(label, (new_h, new_w), cv2.INTER_CUBIC)
+        
+        image_data[...,n_slice] = resize_image
+        label_data[...,n_slice] = resize_label
+    
+    return image_data, label_data

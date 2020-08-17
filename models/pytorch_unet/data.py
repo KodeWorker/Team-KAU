@@ -32,8 +32,8 @@ class SegmentationDataset(data.Dataset):
             torch.manual_seed(seed) # needed for torchvision 0.7
             msk = self.transform(label)
         else:
-            img = torch.from_numpy(data).float()
-            msk = torch.from_numpy(label).float()
+            img = torch.from_numpy(np.asarray(data)).float()
+            msk = torch.from_numpy(np.asarray(label)).float()
             
         return img, msk
 

@@ -4,7 +4,7 @@ import numpy as np
 import nibabel as nib
 from tqdm import trange
 from PIL import Image
-from preprocessing import normalization, stack_channels, pad_and_resize
+from preprocessing import normalization, stack_channels, pad_and_resize, resample
 
 class DataPreparation(object):
     
@@ -47,11 +47,16 @@ class DataPreparation(object):
                 epi_image_data = epi_image.get_fdata()
                 epi_label_data = epi_label.get_fdata()
                 
+                assert (epi_image.header["pixdim"] == epi_label.header["pixdim"]).all(), "mask and image pixdim should be identical"
+                pixdim = epi_image.header["pixdim"]
+                
                 if self.preprocess:
                     if type(self.preprocess) == type(list()):
                         for preprocess_ in self.preprocess:
                             if preprocess_ == pad_and_resize:
                                 epi_image_data, epi_label_data = preprocess_(epi_image_data, epi_label_data, image_size=self.image_size)
+                            elif preprocess_ == resample:
+                                epi_image_data, epi_label_data = preprocess_(epi_image_data, epi_label_data, pixdim = pixdim)
                             else:
                                 epi_image_data, epi_label_data = preprocess_(epi_image_data, epi_label_data)
                     else:
@@ -84,9 +89,9 @@ class DataPreparation(object):
 
 if __name__ == "__main__":
     data_dir = r"D:\Datasets\Brain Tumor Segmentation Challenge\data"
-    output_dir = r"../data/demo"
+    output_dir = r"../data/demo2"
     image_size = 512
     
-    DataPreparation(data_dir, output_dir, image_size, export_ext="png", preprocess=[stack_channels, normalization, pad_and_resize]).run()
+    DataPreparation(data_dir, output_dir, image_size, export_ext="png", preprocess=[resample, stack_channels, normalization, pad_and_resize]).run(is_test=True)
     
     

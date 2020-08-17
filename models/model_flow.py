@@ -14,10 +14,11 @@ def log_loss_summary(loss, step, prefix=""):
 def log_scalar_summary(tag, value, step):
     print("epoch {} | {}: {}".format(step + 1, tag, value))
 
-def dsc(y_pred, y_true):
+#!
+def dsc(y_pred, y_true, smooth=1):
     y_pred = np.round(y_pred).astype(int)
     y_true = np.round(y_true).astype(int)
-    return np.sum(y_pred[y_true == 1]) * 2.0 / (np.sum(y_pred) + np.sum(y_true))
+    return (np.sum(y_pred[y_true == 1]) * 2.0 + smooth) / ((np.sum(y_pred) + np.sum(y_true))+ smooth)
     
 if __name__ == "__main__":
 
@@ -37,7 +38,7 @@ if __name__ == "__main__":
 
     device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
     #device = torch.device("cpu")
-    transforms = transforms.Compose([
+    tra_transforms = transforms.Compose([
                                     transforms.RandomAffine(degrees=(-aug_angle,aug_angle),
                                                             translate=(width_shift_range, height_shift_range),
                                                             scale=(1-aug_scale, 1+aug_scale),
@@ -47,8 +48,13 @@ if __name__ == "__main__":
                                     transforms.ToTensor(),
                                     ])
     
-    train_dataset = SegmentationDataset(train_folder_path, transform=transforms)
-    valid_dataset = SegmentationDataset(valid_folder_path, transform=transforms)
+    val_transforms = transforms.Compose([
+                                        transforms.Resize(image_size),
+                                        transforms.ToTensor(),
+                                        ])
+                                    
+    train_dataset = SegmentationDataset(train_folder_path, transform=tra_transforms)
+    valid_dataset = SegmentationDataset(valid_folder_path, transform=val_transforms)
     
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=True)
