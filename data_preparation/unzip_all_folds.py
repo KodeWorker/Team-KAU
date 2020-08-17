@@ -20,7 +20,7 @@ if __name__ == "__main__":
     
     filepaths = glob.glob(data_dir + "\*.zip")
     
-    if not os.path.exists(extract_dir)
+    if not os.path.exists(extract_dir):
         os.makedirs(extract_dir)
     
     for filepath in tqdm(filepaths):
