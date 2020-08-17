@@ -58,8 +58,7 @@ class DataPreparation(object):
                 epi_image_data = epi_image.get_fdata()
                 epi_label_data = epi_label.get_fdata()
                 
-                assert (epi_image.header["pixdim"] == epi_label.header["pixdim"]).all(), "mask and image pixdim should be identical"
-                pixdim = epi_image.header["pixdim"]
+                pixdims = (epi_image.header["pixdim"], epi_label.header["pixdim"])
                 
                 if self.preprocess:
                     if type(self.preprocess) == type(list()):
@@ -67,7 +66,7 @@ class DataPreparation(object):
                             if preprocess_ == pad_and_resize:
                                 epi_image_data, epi_label_data = preprocess_(epi_image_data, epi_label_data, image_size=self.image_size)
                             elif preprocess_ == resample:
-                                epi_image_data, epi_label_data = preprocess_(epi_image_data, epi_label_data, pixdim = pixdim)
+                                epi_image_data, epi_label_data = preprocess_(epi_image_data, epi_label_data, pixdims = pixdims)
                             else:
                                 epi_image_data, epi_label_data = preprocess_(epi_image_data, epi_label_data)
                     else:

@@ -18,14 +18,13 @@ def log_scalar_summary(tag, value, step):
 def dsc(y_pred, y_true, smooth=1):
     y_pred = np.round(y_pred).astype(int)
     y_true = np.round(y_true).astype(int)
-    return (np.sum(y_pred[y_true == 1]) * 2.0 + smooth) / ((np.sum(y_pred) + np.sum(y_true))+ smooth)
+    return (np.sum((y_pred * y_true)) * 2.0 + smooth) / (np.sum(y_pred) + np.sum(y_true)+ smooth)
     
 if __name__ == "__main__":
 
     batch_size = 8#16
     epochs = 50
     lr = 0.0001
-    workers = 2
     weights = "./"
     image_size = 224#512
     aug_scale = 0.05
@@ -33,6 +32,10 @@ if __name__ == "__main__":
     width_shift_range = 0.1
     height_shift_range = 0.1
     shear_range = 0.1
+    in_channels = 3
+    out_channels = 1
+    init_features = 32
+    
     train_folder_path = "../data/temp/train"
     valid_folder_path = "../data/temp/valid"
 
@@ -62,7 +65,7 @@ if __name__ == "__main__":
     loaders = {"train": train_loader, "valid": valid_loader}
     
     
-    unet = UNet(in_channels=3, out_channels=1)
+    unet = UNet(in_channels=in_channels, out_channels=out_channels, init_features=init_features)
     unet.to(device)
     
     dsc_loss = DiceLoss()
@@ -127,11 +130,12 @@ if __name__ == "__main__":
                 log_scalar_summary("val_dsc", mean_dsc, epoch)
                 if mean_dsc > best_validation_dsc:
                     best_validation_dsc = mean_dsc
-                    torch.save(unet.state_dict(), os.path.join(weights, "unet.pt"))
+                    torch.save(unet.state_dict(), os.path.join(weights, "unet_best_epoch{}.pt".format(epoch+1)))
+                torch.save(unet.state_dict(), os.path.join(weights, "unet_last.pt"))
                 loss_valid = []
     
     print("\nBest validation mean DSC: {:4f}\n".format(best_validation_dsc))
     
-    state_dict = torch.load(os.path.join(weights, "unet.pt"))
-    unet.load_state_dict(state_dict)
-    unet.eval()
+    #state_dict = torch.load(os.path.join(weights, "unet.pt"))
+    #unet.load_state_dict(state_dict)
+    #unet.eval()

@@ -48,19 +48,27 @@ def pad_and_resize(epi_image_data, epi_label_data, image_size):
         image = epi_image_data[..., n_slice]
         label = epi_label_data[..., n_slice]
         
-        square_size = max(image.shape[0], image.shape[1])        
+        image_square_size = max(image.shape[0], image.shape[1])
+        label_square_size = max(label.shape[0], label.shape[1])        
+        
         if image.shape[0] > image.shape[1]:
-            x_init = 0
-            y_init = int(0.5 * square_size - 0.5 * image.shape[1])
+            image_x_init = 0
+            image_y_init = int(0.5 * image_square_size - 0.5 * image.shape[1])
         else:
-            x_init = int(0.5 * square_size - 0.5 * image.shape[0])
-            y_init = 0
+            image_x_init = int(0.5 * image_square_size - 0.5 * image.shape[0])
+            image_y_init = 0
+        if label.shape[0] > label.shape[1]:
+            label_x_init = 0
+            label_y_init = int(0.5 * label_square_size - 0.5 * label.shape[1])
+        else:
+            label_x_init = int(0.5 * label_square_size - 0.5 * label.shape[0])
+            label_y_init = 0
         
-        pad_image = np.zeros((square_size, square_size, 3), dtype=np.uint8)
-        pad_label = np.zeros((square_size, square_size), dtype=np.uint8)
+        pad_image = np.zeros((image_square_size, image_square_size, 3), dtype=np.uint8)
+        pad_label = np.zeros((label_square_size, label_square_size), dtype=np.uint8)
         
-        pad_image[x_init:x_init+image.shape[0], y_init:y_init+image.shape[1], :] = image
-        pad_label[x_init:x_init+image.shape[0], y_init:y_init+image.shape[1]] = label
+        pad_image[image_x_init:image_x_init+image.shape[0], image_y_init:image_y_init+image.shape[1], :] = image
+        pad_label[label_x_init:label_x_init+label.shape[0], label_y_init:label_y_init+label.shape[1]] = label
         
         resize_image = cv2.resize(pad_image, (image_size, image_size), cv2.INTER_CUBIC)
         resize_label = cv2.resize(pad_label, (image_size, image_size), cv2.INTER_CUBIC)
@@ -69,19 +77,22 @@ def pad_and_resize(epi_image_data, epi_label_data, image_size):
     
     return image_data, label_data
 
-def resample(epi_image_data, epi_label_data, pixdim):
-    new_h = int(pixdim[1] * epi_image_data.shape[0])
-    new_w = int(pixdim[2] * epi_image_data.shape[1])
+def resample(epi_image_data, epi_label_data, pixdims):
+    image_new_h = int(pixdims[0][1] * epi_image_data.shape[0])
+    image_new_w = int(pixdims[0][2] * epi_image_data.shape[1])
     
-    image_data = np.zeros((new_h, new_w, epi_image_data.shape[-1]), dtype=np.uint8)
-    label_data = np.zeros((new_h, new_w, epi_image_data.shape[-1]), dtype=np.uint8)
+    label_new_h = int(pixdims[1][1] * epi_label_data.shape[0])
+    label_new_w = int(pixdims[1][2] * epi_label_data.shape[1])
+    
+    image_data = np.zeros((image_new_h, image_new_w, epi_image_data.shape[-1]), dtype=np.float)
+    label_data = np.zeros((label_new_h, label_new_w, epi_image_data.shape[-1]), dtype=np.float)
     
     for n_slice in range(epi_image_data.shape[-1]):
         image = epi_image_data[..., n_slice]
         label = epi_label_data[..., n_slice]
         
-        resize_image = cv2.resize(image, (new_h, new_w), cv2.INTER_CUBIC)
-        resize_label = cv2.resize(label, (new_h, new_w), cv2.INTER_CUBIC)
+        resize_image = cv2.resize(image, (image_new_h, image_new_w), cv2.INTER_CUBIC)
+        resize_label = cv2.resize(label, (label_new_h, label_new_w), cv2.INTER_CUBIC)
         
         image_data[...,n_slice] = resize_image
         label_data[...,n_slice] = resize_label
