@@ -106,4 +106,3 @@ if __name__ == "__main__":
     
     DataPreparation(data_dir, output_dir, image_size, export_ext="png", preprocess=[resample, stack_channels, normalization, pad_and_resize]).run()
     
-    
