@@ -39,6 +39,7 @@ def log_loss_summary(loss, step, prefix=""):
 def log_scalar_summary(tag, value, step):
     print("epoch {} | {}: {}".format(step + 1, tag, value))
 
+#!
 def dsc(y_pred, y_true, smooth=1):
     y_pred = np.round(y_pred).astype(int)
     y_true = np.round(y_true).astype(int)

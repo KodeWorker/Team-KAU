@@ -1,62 +1,28 @@
-import torch
-from torchvision import transforms
-from pytorch_unet.data import SegmentationDataset
-from pytorch_unet.unet import UNet
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-from tqdm import tqdm
+from pytorch_unet_prediction import predict
+from aidea_btsc import dice_score
+import glob
+import numpy as np
 
 if __name__ == "__main__":
-    valid_folder_path = "../data/temp/valid"
-    fig_dir = "./fig/demo"
+
+    raw_validation_image_folder = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\validate_image\image"
+    raw_validation_label_folder = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\validate_label\label"
     
-    if not os.path.exists(fig_dir):
-        os.makedirs(fig_dir)
+    prediction_folder = "./prediction/pytorch_unet"
     
-    image_size = 224
+    if not os.path.exists(prediction_folder):
+        os.makedirs(prediction_folder)
     
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
+    validation_images = glob.glob(os.path.join(raw_validation_image_folder, "*.nii.gz"))
+    validation_labels = glob.glob(os.path.join(raw_validation_label_folder, "*.nii.gz"))
     
-    transforms = transforms.Compose([
-                                    transforms.Resize(image_size),
-                                    transforms.ToTensor(),
-                                    ])
-    valid_dataset = SegmentationDataset(valid_folder_path, transform=transforms)
+    scores = []
+    for image, label in zip(validation_images, validation_labels):
+        out_file = os.path.join(prediction_folder, os.path.basename(label))
+        predict(image, out_file)
+        scores.append(dice_score(out_file, label))
+        break # temp
     
-    unet = UNet(in_channels=3, out_channels=1)
-    unet.to(device)
-    
-    unet.load_state_dict(torch.load("unet.pt"))
-    unet.eval()
-    
-    count = 0
-    #for x,y in tqdm(valid_dataset):
-    for x,y in valid_dataset:
-        x = torch.unsqueeze(x, 0)
-        y_pred = unet(x.to(device))
-        y_pred_np = torch.squeeze(y_pred).detach().cpu().numpy()
-        y_true_np = torch.squeeze(y).detach().cpu().numpy()
-        
-        x_np = torch.squeeze(x).detach().cpu().numpy()
-        #print(np.unique(y_true_np), (np.min(y_pred_np), np.max(y_pred_np)))
-        x_np = x_np.transpose(1,2,0)
-        #print(x_np.shape)
-        
-        y_pred_np[y_pred_np < 0.5] = 0
-        y_pred_np[y_pred_np >= 0.5] = 1
-        
-        fig, ax = plt.subplots(1,2, figsize=(8,8))
-        
-        ax[0].imshow(y_true_np, alpha=0.8, cmap=plt.cm.get_cmap("Greens"))
-        ax[0].imshow(x_np, alpha=0.3)
-        
-        ax[1].imshow(y_pred_np, alpha=0.8, cmap=plt.cm.get_cmap("Reds"))
-        ax[1].imshow(x_np, alpha=0.3)
-        
-        filename = os.path.join(fig_dir, "{:04d}.jpg".format(count))
-        fig.savefig(filename)
-        plt.close(fig)
-        
-        count += 1
-        #break
+    score = np.mean(scores)
+    print("score: {:.8f}".format(score))
