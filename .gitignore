@@ -6,3 +6,5 @@ data/
 *.pt
 *.png
 *.jpg
+*.zip
+*.nii.gz

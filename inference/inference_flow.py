@@ -21,8 +21,9 @@ if __name__ == "__main__":
     for image, label in zip(validation_images, validation_labels):
         out_file = os.path.join(prediction_folder, os.path.basename(label))
         predict(image, out_file)
-        scores.append(dice_score(out_file, label))
-        #break # temp
+        score_ = dice_score(out_file, label)
+        scores.append(score_)
     
+        print(score_)
     score = np.mean(scores)
     print("score: {:.8f}".format(score))

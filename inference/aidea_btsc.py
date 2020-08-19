@@ -1,6 +1,7 @@
 import nibabel as nib
 import numpy as np
 from sklearn.metrics import confusion_matrix
+import cv2
 
 def precision(y_pred, y_true):
     tp = np.sum(y_pred[y_true == 1])
@@ -36,7 +37,4 @@ def dice_score(out_file, label):
     y_true = true_image.get_fdata()
     
     score = dice(y_pred, y_true)
-    
-    print(score) #!
-    
     return score

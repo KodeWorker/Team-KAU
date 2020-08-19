@@ -24,6 +24,7 @@ def build_argparser():
     # data
     parser.add_argument("-t", "--train_folder", help="", required=True, type=str)
     parser.add_argument("-v", "--validation_folder", help="", required=True, type=str)
+    parser.add_argument("-p", "--pretrained_model", help="", default=None, type=str)
     
     # image augmentation
     parser.add_argument("--aug_scale", help="", default=0.05, type=float)
@@ -64,6 +65,7 @@ if __name__ == "__main__":
     
     train_folder_path = args.train_folder
     valid_folder_path = args.validation_folder
+    pretrained_model_path = args.pretrained_model
 
     device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
     #device = torch.device("cpu")
@@ -92,6 +94,8 @@ if __name__ == "__main__":
     
     
     unet = UNet(in_channels=in_channels, out_channels=out_channels, init_features=init_features)
+    if pretrained_model_path:
+        unet.load_state_dict(torch.load(pretrained_model_path))
     unet.to(device)
     
     dsc_loss = DiceLoss()
