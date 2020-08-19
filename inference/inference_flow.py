@@ -22,7 +22,7 @@ if __name__ == "__main__":
         out_file = os.path.join(prediction_folder, os.path.basename(label))
         predict(image, out_file)
         scores.append(dice_score(out_file, label))
-        break # temp
+        #break # temp
     
     score = np.mean(scores)
     print("score: {:.8f}".format(score))

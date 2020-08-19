@@ -2,12 +2,14 @@ import os
 import glob
 from shutil import copyfile
 from tqdm import tqdm
+import cv2
+import numpy as np
 
 if __name__ == "__main__":
 
-    source = "../data/demo/validation"
-    target = "../data/temp2/valid"
-    n_images = 1000
+    source = "../data/demo/train"
+    target = "../data/temp2/train"
+    n_images = 5000
     
     if not os.path.exists(target):
         os.makedirs(target)
@@ -20,10 +22,16 @@ if __name__ == "__main__":
     
     images = glob.glob(source + "/imgs/*.png")
     
-    for image_path in tqdm(images[:n_images]):
+    count = 0
+    for image_path in images:
         filename = os.path.basename(image_path)
         mask_path = image_path.replace("imgs", "masks")
         
-        copyfile(image_path, os.path.join(target, "imgs", filename))
-        copyfile(mask_path, os.path.join(target, "masks", filename))
+        mask = cv2.imread(mask_path)
+        if np.sum(mask!=0) != 0:
+            copyfile(image_path, os.path.join(target, "imgs", filename))
+            copyfile(mask_path, os.path.join(target, "masks", filename))
+            count += 1
         
+        if count == n_images:
+            break

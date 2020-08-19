@@ -4,6 +4,9 @@ from torchvision import transforms
 from pytorch_unet.unet import UNet
 import torch
 from PIL import Image
+from tqdm import trange
+import cv2
+import numpy as np
 
 def predict(image, out_file):
     
@@ -29,6 +32,7 @@ def predict(image, out_file):
     epi_image = nib.load(image)
     epi_image_data = epi_image.get_fdata()
     dummy = epi_image_data.copy()
+    h, w = epi_image_data.shape[0], epi_image_data.shape[1]
     
     pixdims = (epi_image.header["pixdim"], epi_image.header["pixdim"])
     for preprocess_ in preprocess:
@@ -39,14 +43,21 @@ def predict(image, out_file):
         else:
             epi_image_data, dummy = preprocess_(epi_image_data, dummy)
     
-    for n_slice in range(epi_image_data.shape[-1]):
+    epi_label_pred = []
+    for n_slice in trange(epi_image_data.shape[-1]):
         input_image = epi_image_data[..., n_slice]
         x = transform(Image.fromarray(input_image.transpose(1, 0, 2)))
         
         x = torch.unsqueeze(x, 0)
         y_pred = unet(x.to(device))
         y_pred_np = torch.squeeze(y_pred).detach().cpu().numpy()
-        #!
-        print(y_pred_np.shape)
-        break # temp
         
+        y_pred_np = np.round(y_pred_np).astype(np.uint8)
+        y_pred_np = cv2.resize(y_pred_np, (h, w), cv2.INTER_CUBIC)
+        epi_label_pred.append(np.expand_dims(y_pred_np, axis=-1))
+    
+    epi_label_pred = np.concatenate(epi_label_pred, axis=-1)
+    
+    img = nib.Nifti1Image(epi_label_pred, affine=None)
+    img.to_filename(out_file)
+    

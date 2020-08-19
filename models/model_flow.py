@@ -154,10 +154,10 @@ if __name__ == "__main__":
                     dsc(validation_pred, validation_true)
                 )
                 log_scalar_summary("val_dsc", mean_dsc, epoch)
-                log_scalar_summary("best_dsc", best_validation_dsc, epoch)
                 if mean_dsc > best_validation_dsc:
                     best_validation_dsc = mean_dsc
                     torch.save(unet.state_dict(), os.path.join(weights, "unet_best_epoch{}.pt".format(epoch+1)))
+                log_scalar_summary("best_dsc", best_validation_dsc, epoch)
                 torch.save(unet.state_dict(), os.path.join(weights, "unet_last.pt"))
                 loss_valid = []
     
