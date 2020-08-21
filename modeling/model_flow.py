@@ -68,7 +68,7 @@ if __name__ == "__main__":
     pretrained_model_path = args.pretrained_model
 
     device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
-    #device = torch.device("cpu")
+    
     tra_transforms = transforms.Compose([
                                     transforms.RandomAffine(degrees=(-aug_angle,aug_angle),
                                                             translate=(width_shift_range, height_shift_range),
