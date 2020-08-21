@@ -11,6 +11,7 @@ def build_argparser():
     # model settings
     parser.add_argument("-s", "--source", help="", required=True, type=str)
     parser.add_argument("-t", "--target", help="", required=True, type=str)
+    return parser
     
 if __name__ == "__main__":
     args = build_argparser().parse_args()
