@@ -1,0 +1,85 @@
+from efficientnet_pytorch import EfficientNet
+import nibabel as nib
+from preprocessing import normalization, stack_channels_valid, pad_and_resize, resample
+from torchvision import transforms
+from pytorch_unet.unet import UNet
+import torch
+from PIL import Image
+from tqdm import trange
+import cv2
+import numpy as np
+
+def predict(image, out_file):
+    
+    in_channels = 3
+    out_channels = 1
+    init_features = 32
+    image_size = 224
+    labels_map = {"brain": 0, "nobrain": 1}
+    unet_model_path = "./pytorch_unet_models/unet_tumors_only3.pt"
+    efficientnet_model_path = "./pytorch_efficientnet_models/nobrainer_prototype.pt"
+    model_name = "efficientnet-b0"
+    preprocess=[resample, stack_channels_valid, normalization, pad_and_resize]
+    
+    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
+    #device = torch.device("cpu")
+    
+    transform = transforms.Compose([
+                                    transforms.Resize(image_size),
+                                    transforms.ToTensor(),
+                                    ])
+    
+    efn = EfficientNet.from_name(model_name, override_params={'num_classes': len(labels_map)})
+    efn.load_state_dict(torch.load(efficientnet_model_path))
+    
+    unet = UNet(in_channels=in_channels, out_channels=out_channels, init_features=init_features)
+    unet.to(device)
+    unet.load_state_dict(torch.load(unet_model_path))
+    unet.eval()
+    
+    epi_image = nib.load(image)
+    epi_image_data = epi_image.get_fdata()
+    dummy = epi_image_data.copy()
+    h, w = epi_image_data.shape[0], epi_image_data.shape[1]
+    
+    pixdims = (epi_image.header["pixdim"], epi_image.header["pixdim"])
+    for preprocess_ in preprocess:
+        if preprocess_ == pad_and_resize:
+            epi_image_data, dummy = preprocess_(epi_image_data, dummy, image_size=image_size)
+        elif preprocess_ == resample:
+            epi_image_data, dummy = preprocess_(epi_image_data, dummy, pixdims = pixdims)
+        else:
+            epi_image_data, dummy = preprocess_(epi_image_data, dummy)
+    
+    epi_label_pred = []
+    nobrain_count = 0
+    for n_slice in trange(epi_image_data.shape[-1]):
+        input_image = epi_image_data[..., n_slice]
+        
+        x = transform(Image.fromarray(input_image.transpose(1, 0, 2)))
+        
+        x = torch.unsqueeze(x, 0)
+        
+        y_nobrain = efn(x.to(device))
+        y_nobrain_np = torch.squeeze(y_nobrain).detach().cpu().numpy()
+        
+        if np.argmax(y_nobrain_np) == labels_map["brain"]:
+        
+            y_pred = unet(x.to(device))
+            y_pred_np = torch.squeeze(y_pred).detach().cpu().numpy()
+            y_pred_np = y_pred_np.transpose(1, 0)
+            
+            y_pred_np = cv2.resize(y_pred_np, (h, w), cv2.INTER_CUBIC)
+            y_pred_np = np.round(y_pred_np).astype(np.uint8)
+            
+        elif np.argmax(y_nobrain_np) == labels_map["nobrain"]:
+            nobrain_count += 1
+            y_pred_np = np.zeros((h, w), dtype=np.uint8)
+            
+        epi_label_pred.append(np.expand_dims(y_pred_np, axis=-1))
+        
+    epi_label_pred = np.concatenate(epi_label_pred, axis=-1)
+    
+    print("nobrain count: {:d}".format(nobrain_count))
+    img = nib.Nifti1Image(epi_label_pred, affine=None)
+    img.to_filename(out_file)

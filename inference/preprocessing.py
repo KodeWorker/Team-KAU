@@ -124,3 +124,29 @@ def stack_channels_valid(epi_image_data, epi_label_data):
                                                   np.expand_dims(slice2, axis=-1), 
                                                   np.expand_dims(slice3, axis=-1)), axis=-1)
     return image_data, label_data
+
+def stack_channels_valid2(epi_image_data, epi_label_data):
+    image_data = epi_image_data.copy()
+    label_data = epi_label_data.copy()
+    
+    image_data = np.expand_dims(image_data, axis=-2)
+    repeats = (1,1,3,1)
+    image_data = np.tile(image_data, repeats)
+    
+    for n_slice in range(0, image_data.shape[-1]):
+        
+        slice2 = epi_image_data[...,n_slice]
+        if n_slice == 0:
+            slice1 = np.zeros((image_data.shape[0], image_data.shape[1]))
+            slice3 = epi_image_data[...,n_slice+1]
+        elif n_slice == image_data.shape[-1] - 1:
+            slice1 = epi_image_data[...,n_slice-1]
+            slice3 = np.zeros((image_data.shape[0], image_data.shape[1]))
+        else:
+            slice1 = epi_image_data[...,n_slice-1]
+            slice3 = epi_image_data[...,n_slice+1]
+        
+        image_data[...,n_slice] = np.concatenate((np.expand_dims(slice1, axis=-1), 
+                                                  np.expand_dims(slice2, axis=-1), 
+                                                  np.expand_dims(slice3, axis=-1)), axis=-1)
+    return image_data, label_data
