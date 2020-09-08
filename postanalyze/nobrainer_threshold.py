@@ -14,21 +14,27 @@ def softmax(x):
     exp_x = np.exp(x)
     softmax_x = exp_x / np.sum(exp_x)
     return softmax_x 
+
+if __name__ == "__main__":
     
-def predict(image, out_file):
+    #filename = "633TNGNB.nii.gz"
+    #filename = "A4GY5J5E.nii.gz"
+    #filename = "IYO2C7Z7.nii.gz"
+    filename = "JMAI55EV.nii.gz"
+    image = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\validate_image\image\{}".format(filename)
     
     in_channels = 3
     out_channels = 1
-    init_features = 64
-    image_size = 256
+    init_features = 32
+    image_size = 224
     labels_map = {"brain": 0, "nobrain": 1}
-    unet_model_path = "./pytorch_unet_models/unet64.pt"
+    unet_model_path = "./pytorch_unet_models/unet_tumors_only2.pt"
     efficientnet_model_path = "./pytorch_efficientnet_models/nobrainer_prototype2.pt"
     model_name = "efficientnet-b0"
     preprocess=[resample, stack_channels_valid, normalization, pad_and_resize]
     
-    device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
-    #device = torch.device("cpu")
+    #device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
+    device = torch.device("cpu")
     
     transform = transforms.Compose([
                                     transforms.Resize(image_size),
@@ -59,10 +65,8 @@ def predict(image, out_file):
             epi_image_data, dummy = preprocess_(epi_image_data, dummy)
     
     epi_label_pred = []
-    no_brain = []
-    
-    # stage one
-    for n_slice in trange(epi_image_data.shape[-1]):
+    nobrain_count = 0
+    for n_slice in range(epi_image_data.shape[-1]-10, epi_image_data.shape[-1]):
         input_image = epi_image_data[..., n_slice]
         
         x = transform(Image.fromarray(input_image.transpose(1, 0, 2)))
@@ -71,49 +75,6 @@ def predict(image, out_file):
         
         y_nobrain = efn(x.to(device))
         y_nobrain_np = torch.squeeze(y_nobrain).detach().cpu().numpy()
+        y_pred = softmax(y_nobrain_np)
         
-        no_brain.append(np.argmax(softmax(y_nobrain_np)))
-    
-    # expand from center
-    n_center_slice = int(epi_image_data.shape[-1]/2)
-    for n_slice in range(1, n_center_slice):
-        prev, current = no_brain[n_slice-1], no_brain[n_slice]
-        if current == labels_map["brain"] and prev == labels_map["nobrain"]:
-            no_brain[n_slice:n_center_slice] = [labels_map["brain"]] * (n_center_slice-n_slice)
-            break
-        
-    for n_slice in range(n_center_slice, epi_image_data.shape[-1]):
-        prev, current = no_brain[n_slice-1], no_brain[n_slice]
-        if current == labels_map["nobrain"] and prev == labels_map["brain"]:
-            no_brain[n_slice:epi_image_data.shape[-1]] = [labels_map["nobrain"]] * (epi_image_data.shape[-1]-n_slice)
-            break
-    
-    # stage two
-    for n_slice in trange(epi_image_data.shape[-1]):
-     
-        if no_brain[n_slice] == labels_map["brain"]:
-        
-            input_image = epi_image_data[..., n_slice]
-        
-            x = transform(Image.fromarray(input_image.transpose(1, 0, 2)))
-            
-            x = torch.unsqueeze(x, 0)
-    
-            y_pred = unet(x.to(device))
-            y_pred_np = torch.squeeze(y_pred).detach().cpu().numpy()
-            y_pred_np = y_pred_np.transpose(1, 0)
-            
-            y_pred_np = cv2.resize(y_pred_np, (h, w), cv2.INTER_CUBIC)
-            y_pred_np = np.round(y_pred_np).astype(np.uint8)
-            
-        elif no_brain[n_slice] == labels_map["nobrain"]:
-        
-            y_pred_np = np.zeros((h, w), dtype=np.uint8)
-            
-        epi_label_pred.append(np.expand_dims(y_pred_np, axis=-1))
-        
-    epi_label_pred = np.concatenate(epi_label_pred, axis=-1)
-    
-    print("nobrain count: {:d}".format(np.sum(no_brain)))
-    img = nib.Nifti1Image(epi_label_pred, affine=None)
-    img.to_filename(out_file)
+        print(y_pred)

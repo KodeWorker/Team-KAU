@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-    names = ["367NGTCG.nii.gz", "3ZU763QD.nii.gz", "ADYQS7NB.nii.gz", "E7AD2EZH.nii.gz", "HQFRTSMF.nii.gz", "LJX7N4UD.nii.gz"]        
+    #names = ["367NGTCG.nii.gz", "3ZU763QD.nii.gz", "ADYQS7NB.nii.gz", "E7AD2EZH.nii.gz", "HQFRTSMF.nii.gz", "LJX7N4UD.nii.gz"]
+    names = ["633TNGNB.nii.gz", "A4GY5J5E.nii.gz", "IYO2C7Z7.nii.gz", "JMAI55EV.nii.gz"]
     raw_validation_image_folder = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\validate_image\image"
     raw_validation_label_folder = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\validate_label\label"
     prediction_folder = r"./prediction/pytorch_unet(47)"

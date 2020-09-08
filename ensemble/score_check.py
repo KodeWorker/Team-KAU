@@ -9,7 +9,7 @@ if __name__ == "__main__":
     #raw_validation_image_folder = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\validate_image\image"
     raw_validation_label_folder = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\validate_label\label"
     
-    prediction_folder = r"D:\code\AIdea\inference\prediction\Xu\xu_20200907"
+    prediction_folder = r"D:\code\AIdea\ensemble\results\voting"
     
     if not os.path.exists(prediction_folder):
         os.makedirs(prediction_folder)
