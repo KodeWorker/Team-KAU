@@ -7,10 +7,12 @@ from tqdm import tqdm
 if __name__ == "__main__":
 
     score = {"group1": {"2-stage-224-2d-unet32":0.5817068,
-                        "2-stage-256-2d-unet64":0.5896492},             
+                        "2-stage-256-2d-unet64":0.5896492,
+                        "2-stage-256-n4rc-unet64": 0.53648260},             
              "group2": {"64-3d-unet32":0.4385284,
                         "64-3d-unet16":0.4525714,
-                        "128-3d-unet16":0.5892320}}
+                        "128-3d-unet16":0.5892320,
+                        "128-3d-unet16-pretrained":0.595441}}
              
     predictions_dir = "./predictions"
     results_dir = "./results/voting"
@@ -43,7 +45,11 @@ if __name__ == "__main__":
             total_sum[total_sum>=threshold] = 1
             pred_within_group[group] = total_sum
         
-        x = np.clip(pred_within_group["group1"] + pred_within_group["group2"], 0, 1)
+        x = np.logical_or(pred_within_group["group1"], pred_within_group["group2"])
+        x = x.astype(np.float)
+        
+        #x = np.logical_and(pred_within_group["group1"], pred_within_group["group2"])
+        #x = x.astype(np.float)
         
         output_file_path = os.path.join(results_dir, filename)
         img = nib.Nifti1Image(x, affine=None)

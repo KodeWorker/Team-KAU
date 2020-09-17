@@ -1,6 +1,6 @@
 import os
 #from pytorch_unet_prediction import predict, predict_central_focus
-from pytorch_two_stage_prediction import predict
+from pytorch_two_stage_ncrops import predict
 from aidea_btsc import dice_score
 import glob
 import numpy as np

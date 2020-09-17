@@ -74,13 +74,15 @@ if __name__ == "__main__":
                                                             translate=(width_shift_range, height_shift_range),
                                                             scale=(1-aug_scale, 1+aug_scale),
                                                             shear=shear_range),
-                                    transforms.Resize(image_size),
+                                    #transforms.Resize(image_size),
+                                    transforms.RandomCrop(image_size),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.ToTensor(),
                                     ])
     
     val_transforms = transforms.Compose([
-                                        transforms.Resize(image_size),
+                                        #transforms.Resize(image_size),
+                                        transforms.RandomCrop(image_size),
                                         transforms.ToTensor(),
                                         ])
                                     
