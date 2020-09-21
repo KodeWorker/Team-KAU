@@ -12,6 +12,8 @@ if __name__ == "__main__":
              "64-3d-unet16":0.4525714,
              "128-3d-unet16":0.5892320}
     """
+    
+    """
     score = {"2-stage-224-2d-unet32":0.5817068,
              "2-stage-256-2d-unet64":0.5896492,
              "2-stage-256-n4rc-unet64": 0.53648260,
@@ -19,7 +21,15 @@ if __name__ == "__main__":
              #"64-3d-unet16":0.4525714,
              "128-3d-unet16":0.5892320,
              "128-3d-unet16-pretrained":0.595441}
-             
+    """
+    
+    score = {"2-stage-224-2d-unet32": 0.5475687,
+             "2-stage-256-2d-unet64": 0.5316030,
+             #"2-stage-256-rc-unet64": 0,
+             #"2-stage-256-n4rc-unet64": 0,
+             "128-3d-unet16": 0.5915776,
+             "128-3d-unet16-pretrained": 0.6051299}
+    
     predictions_dir = "./predictions"
     results_dir = "./results/voting"
     threshold = 0.5

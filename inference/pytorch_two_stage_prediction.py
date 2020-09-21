@@ -23,7 +23,7 @@ def predict(image, out_file):
     image_size = 256
     labels_map = {"brain": 0, "nobrain": 1}
     unet_model_path = "./pytorch_unet_models/unet64.pt"
-    efficientnet_model_path = "./pytorch_efficientnet_models/nobrainer_prototype2.pt"
+    efficientnet_model_path = "./pytorch_efficientnet_models/nobrainer.pt"
     model_name = "efficientnet-b0"
     preprocess=[resample, stack_channels_valid, normalization, pad_and_resize]
     

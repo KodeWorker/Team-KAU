@@ -39,8 +39,8 @@ def predict(image, out_file):
     origin_image_size = 512
     image_size = 256
     labels_map = {"brain": 0, "nobrain": 1}
-    unet_model_path = "./pytorch_unet_models/unet64-n4rc-e13.pt"
-    efficientnet_model_path = "./pytorch_efficientnet_models/nobrainer_prototype2.pt"
+    unet_model_path = "./pytorch_unet_models/rc-unet64.pt"
+    efficientnet_model_path = "./pytorch_efficientnet_models/nobrainer.pt"
     model_name = "efficientnet-b0"
     preprocess=[resample, stack_channels_valid, normalization, pad_and_resize]
     
@@ -109,6 +109,7 @@ def predict(image, out_file):
         if current == labels_map["nobrain"] and prev == labels_map["brain"]:
             no_brain[n_slice:epi_image_data.shape[-1]] = [labels_map["nobrain"]] * (epi_image_data.shape[-1]-n_slice)
             break
+    
     
     # stage two
     for n_slice in trange(epi_image_data.shape[-1]):
