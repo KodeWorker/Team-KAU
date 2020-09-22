@@ -14,15 +14,32 @@ def softmax(x):
     exp_x = np.exp(x)
     softmax_x = exp_x / np.sum(exp_x)
     return softmax_x 
+
+def reconstruct_label(five_crops, h, w):
+    output = np.zeros((h, w))
+    crop_h, crop_w = five_crops.shape[1], five_crops.shape[2]
+    tl, tr, bl, br, c = five_crops
     
+    output[:crop_h,:crop_w] += tl
+    output[:crop_h,-crop_w:] += tr
+    output[-crop_h:,:crop_w] += bl
+    output[-crop_h:,-crop_w:] += br
+    
+    center_top = int((h-crop_h+1)*0.5)
+    center_left = int((w-crop_w+1)*0.5)
+    output[center_top:center_top+crop_h,center_left:center_left+crop_w] = output[center_top:center_top+crop_h,center_left:center_left+crop_w]*0.5 + c*0.5
+    
+    return output
+
 def predict(image, out_file):
     
     in_channels = 3
     out_channels = 1
-    init_features = 32
-    image_size = 224
+    init_features = 64
+    origin_image_size = 512
+    image_size = 256
     labels_map = {"brain": 0, "nobrain": 1}
-    unet_model_path = "./pytorch_unet_models/unet32.pt"
+    unet_model_path = "./pytorch_unet_models/rc-unet64.pt"
     efficientnet_model_path = "./pytorch_efficientnet_models/nobrainer.pt"
     model_name = "efficientnet-b0"
     preprocess=[resample, stack_channels_valid, normalization, pad_and_resize]
@@ -30,11 +47,16 @@ def predict(image, out_file):
     device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
     #device = torch.device("cpu")
     
-    transform = transforms.Compose([
-                                    transforms.Resize(image_size),
-                                    transforms.ToTensor(),
+    nobrainer_transform = transforms.Compose([
+                                            transforms.Resize(image_size),
+                                            transforms.ToTensor(),
+                                            ])
+    unet_transform = transforms.Compose([
+                                    transforms.FiveCrop(image_size),
+                                    transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops]))
                                     ])
     
+    #efn = EfficientNet.from_name(model_name, num_classes=len(labels_map))
     efn = EfficientNet.from_name(model_name, override_params={'num_classes': len(labels_map)})
     efn.load_state_dict(torch.load(efficientnet_model_path))
     efn.to(device)
@@ -52,7 +74,7 @@ def predict(image, out_file):
     pixdims = (epi_image.header["pixdim"], epi_image.header["pixdim"])
     for preprocess_ in preprocess:
         if preprocess_ == pad_and_resize:
-            epi_image_data, dummy = preprocess_(epi_image_data, dummy, image_size=image_size)
+            epi_image_data, dummy = preprocess_(epi_image_data, dummy, image_size=origin_image_size)
         elif preprocess_ == resample:
             epi_image_data, dummy = preprocess_(epi_image_data, dummy, pixdims = pixdims)
         else:
@@ -65,7 +87,7 @@ def predict(image, out_file):
     for n_slice in trange(epi_image_data.shape[-1]):
         input_image = epi_image_data[..., n_slice]
         
-        x = transform(Image.fromarray(input_image.transpose(1, 0, 2)))
+        x = nobrainer_transform(Image.fromarray(input_image.transpose(1, 0, 2)))
         
         x = torch.unsqueeze(x, 0)
         
@@ -88,6 +110,7 @@ def predict(image, out_file):
             no_brain[n_slice:epi_image_data.shape[-1]] = [labels_map["nobrain"]] * (epi_image_data.shape[-1]-n_slice)
             break
     
+    
     # stage two
     for n_slice in trange(epi_image_data.shape[-1]):
      
@@ -95,20 +118,17 @@ def predict(image, out_file):
         
             input_image = epi_image_data[..., n_slice]
         
-            x = transform(Image.fromarray(input_image.transpose(1, 0, 2)))
+            x = unet_transform(Image.fromarray(input_image.transpose(1, 0, 2)))
             
-            x = torch.unsqueeze(x, 0)
-    
             y_pred = unet(x.to(device))
             y_pred_np = torch.squeeze(y_pred).detach().cpu().numpy()
-            y_pred_np = y_pred_np.transpose(1, 0)
             
-            y_pred_np = cv2.resize(y_pred_np, (h, w), cv2.INTER_CUBIC)
-            y_pred_np = np.round(y_pred_np).astype(np.uint8)
+            y_pred_np = reconstruct_label(y_pred_np, h, w)
+            y_pred_np = y_pred_np.transpose(1, 0)
             
         elif no_brain[n_slice] == labels_map["nobrain"]:
         
-            y_pred_np = np.zeros((h, w), dtype=np.uint8)
+            y_pred_np = np.zeros((h, w))
             
         epi_label_pred.append(np.expand_dims(y_pred_np, axis=-1))
         

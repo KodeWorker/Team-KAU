@@ -5,34 +5,20 @@ import numpy as np
 from tqdm import tqdm
 
 if __name__ == "__main__":
-    """
-    score = {"2-stage-224-2d-unet32":0.5817068,
-             "2-stage-256-2d-unet64":0.5896492,
-             "64-3d-unet32":0.4385284,
-             "64-3d-unet16":0.4525714,
-             "128-3d-unet16":0.5892320}
-    """
     
-    """
-    score = {"2-stage-224-2d-unet32":0.5817068,
-             "2-stage-256-2d-unet64":0.5896492,
-             "2-stage-256-n4rc-unet64": 0.53648260,
-             "2-stage-256-rc-unet64": ,
-             
-             "128-3d-unet16":0.5892320,
-             "128-3d-unet16-pretrained":0.595441}
-    """
+    predictions_dir = "./predictions(test)"
     
-    score = {"2-stage-224-2d-unet32": 0.5475687 * 0.25,
+    score = {
+             "2-stage-224-2d-unet32": 0.5475687 * 0.25,
              "2-stage-256-2d-unet64": 0.5316030 * 0.25,
-             "2-stage-256-rc-unet64": 0.4642530 * 0.25,
-             "2-stage-256-n4rc-unet64": 0.4782162 * 0.25,
+             "2-stage-256-2d-rc-unet64": 0.4642530 * 0.25,
+             "2-stage-256-2d-n4rc-unet64": 0.4782162 * 0.25,
              
              "128-3d-unet16": 0.5915776 * 0.5,
-             "128-3d-unet16-pretrained": 0.6051299 * 0.5}
+             "128-3d-unet16-pretrained": 0.6051299 * 0.5
+            }
     
-    predictions_dir = "./predictions"
-    results_dir = "./results/non_empty_voting"
+    results_dir = "./results/voting"
     threshold = 0.5
     
     if not os.path.exists(results_dir):
@@ -47,7 +33,6 @@ if __name__ == "__main__":
         
         for model in score.keys():
         
-            
             prediction_file_path = os.path.join(predictions_dir, model, filename)
             
             pred_image = nib.load(prediction_file_path)
@@ -69,6 +54,3 @@ if __name__ == "__main__":
         
         img = nib.Nifti1Image(total_sum, affine=None)
         img.to_filename(output_file_path)
-        
-        #break
-        

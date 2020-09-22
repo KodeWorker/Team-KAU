@@ -19,10 +19,10 @@ def predict(image, out_file):
     
     in_channels = 3
     out_channels = 1
-    init_features = 32
-    image_size = 224
+    init_features = 64
+    image_size = 256
     labels_map = {"brain": 0, "nobrain": 1}
-    unet_model_path = "./pytorch_unet_models/unet32.pt"
+    unet_model_path = "./pytorch_unet_models/unet64.pt"
     efficientnet_model_path = "./pytorch_efficientnet_models/nobrainer.pt"
     model_name = "efficientnet-b0"
     preprocess=[resample, stack_channels_valid, normalization, pad_and_resize]
@@ -104,11 +104,12 @@ def predict(image, out_file):
             y_pred_np = y_pred_np.transpose(1, 0)
             
             y_pred_np = cv2.resize(y_pred_np, (h, w), cv2.INTER_CUBIC)
-            y_pred_np = np.round(y_pred_np).astype(np.uint8)
+            #y_pred_np = np.round(y_pred_np).astype(np.uint8)
             
         elif no_brain[n_slice] == labels_map["nobrain"]:
         
-            y_pred_np = np.zeros((h, w), dtype=np.uint8)
+            #y_pred_np = np.zeros((h, w), dtype=np.uint8)
+            y_pred_np = np.zeros((h, w))
             
         epi_label_pred.append(np.expand_dims(y_pred_np, axis=-1))
         
