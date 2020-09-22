@@ -7,6 +7,7 @@ from torchvision import transforms
 from pytorch_unet.metrics import DiceLoss
 import torch.optim as optim
 from tqdm import tqdm
+import numpy as np
 
 def log_loss_summary(loss, step, prefix=""):
     print("epoch {} | {}: {}".format(step + 1, prefix + "loss", np.mean(loss)))
@@ -31,6 +32,10 @@ if __name__ == "__main__":
     batch_size = 8
     lr = 1e-4
     num_models = 7
+    weights = "../weights/ensemble"
+    
+    if not os.path.exists(weights):
+        os.makedirs(weights)
     
     print("Number of base models: {}".format(num_models))
     

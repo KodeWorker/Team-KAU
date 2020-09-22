@@ -9,17 +9,18 @@ if __name__ == "__main__":
     predictions_dir = "./predictions(test)"
     
     score = {
+            # House of Commons
              "2-stage-224-2d-unet32": 0.5475687 * 0.2,
              "2-stage-256-2d-unet64": 0.5316030 * 0.2,
              "2-stage-256-2d-rc-unet64": 0.4642530 * 0.2,
              "2-stage-256-2d-n4rc-unet64": 0.4782162 * 0.2,
              "2-stage-224-2d-n4-unet32": 0.4700288 * 0.2,
-             
+            # House of Lords
              "128-3d-unet16": 0.5915776 * 0.5,
              "128-3d-unet16-pretrained": 0.6051299 * 0.5
             }
     
-    results_dir = "./results/voting"
+    results_dir = "./results/prob_voting"
     threshold = 0.5
     
     if not os.path.exists(results_dir):
@@ -39,7 +40,7 @@ if __name__ == "__main__":
             pred_image = nib.load(prediction_file_path)
             y_pred = pred_image.get_fdata()
             
-            if (np.sum(y_pred) != 0):
+            if (np.sum(y_pred) != 0): # reject nonsense
                 
                 score_sum.append(score[model])
                 collection.append(y_pred*score[model])

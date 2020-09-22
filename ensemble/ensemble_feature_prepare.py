@@ -47,7 +47,7 @@ if __name__ == "__main__":
             
             feature_list = []
             for model, cube in features.items():
-                feature_list.append(np.expand_dims(cv2.resize(cube[..., n_slice]*score[model], (image_size, image_size), cv2.INTER_CUBIC), axis=0))
+                feature_list.append(np.expand_dims(cv2.resize(cube[..., n_slice]*score[model]/np.sum(list(score.values())), (image_size, image_size), cv2.INTER_CUBIC), axis=0))
             
             x = np.concatenate(feature_list, axis = 0)
             y = np.expand_dims(cv2.resize(label_cube[..., n_slice], (image_size, image_size), cv2.INTER_CUBIC), axis=0)
