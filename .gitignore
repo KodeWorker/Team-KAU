@@ -9,3 +9,5 @@ data/
 *.zip
 *.nii.gz
 *.xlsx
+*.tar.gz
+*.tar
