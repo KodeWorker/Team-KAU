@@ -7,10 +7,20 @@ import cv2
 
 if __name__ == "__main__":
     
-    image_size = 224
+    image_size = 256
     feature_dir = "./predictions(validation)"
-    label_dir = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\validate_label\label"
+    label_dir = r"D:\datasets\brats\validation\label"
     output_dir = "../data/ensemble/train"
+    score = {
+             "2-stage-224-2d-unet32": 0.5475687 * 0.2,
+             "2-stage-256-2d-unet64": 0.5316030 * 0.2,
+             "2-stage-256-2d-rc-unet64": 0.4642530 * 0.2,
+             "2-stage-256-2d-n4rc-unet64": 0.4782162 * 0.2,
+             "2-stage-224-2d-n4-unet32": 0.4700288 * 0.2,
+             
+             "128-3d-unet16": 0.5915776 * 0.5,
+             "128-3d-unet16-pretrained": 0.6051299 * 0.5
+            }
     
     if not os.path.exists(os.path.join(output_dir, "images")):
         os.makedirs(os.path.join(output_dir, "images"))
@@ -37,7 +47,7 @@ if __name__ == "__main__":
             
             feature_list = []
             for model, cube in features.items():
-                feature_list.append(np.expand_dims(cv2.resize(cube[..., n_slice], (image_size, image_size), cv2.INTER_CUBIC), axis=0))
+                feature_list.append(np.expand_dims(cv2.resize(cube[..., n_slice]*score[model], (image_size, image_size), cv2.INTER_CUBIC), axis=0))
             
             x = np.concatenate(feature_list, axis = 0)
             y = np.expand_dims(cv2.resize(label_cube[..., n_slice], (image_size, image_size), cv2.INTER_CUBIC), axis=0)

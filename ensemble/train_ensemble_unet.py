@@ -24,13 +24,13 @@ if __name__ == "__main__":
     
     pretrained_model_path = None    
     out_channels = 1
-    init_features = 32
+    init_features = 64
     data_dir = "../data/ensemble/train"
     epochs = 50
     val_ratio = 0.1
     batch_size = 8
     lr = 1e-4
-    num_models = 4
+    num_models = 7
     
     print("Number of base models: {}".format(num_models))
     

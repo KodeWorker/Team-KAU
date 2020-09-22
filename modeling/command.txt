@@ -1,0 +1,1 @@
+python model_flow.py -b 32 -e 50 -s 224 -f 32 -t ../data/filtered/n4/train -v ../data/processed/n4/validation
