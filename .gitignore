@@ -11,3 +11,4 @@ data/
 *.xlsx
 *.tar.gz
 *.tar
+*.npy
