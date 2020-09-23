@@ -126,7 +126,7 @@ def predict(image, out_file):
             y_pred_np = reconstruct_label(y_pred_np, h, w)
             y_pred_np = y_pred_np.transpose(1, 0)
             
-            y_pred_np = np.round(y_pred_np).astype(np.uint8)
+            #y_pred_np = np.round(y_pred_np).astype(np.uint8)
             
         elif no_brain[n_slice] == labels_map["nobrain"]:
         
@@ -135,6 +135,7 @@ def predict(image, out_file):
         epi_label_pred.append(np.expand_dims(y_pred_np, axis=-1))
         
     epi_label_pred = np.concatenate(epi_label_pred, axis=-1)
+    epi_label_pred = np.round(epi_label_pred)
     
     print("nobrain count: {:d}".format(np.sum(no_brain)))
     img = nib.Nifti1Image(epi_label_pred, affine=None)

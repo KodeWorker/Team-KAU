@@ -114,7 +114,7 @@ def predict_central_focus(image, out_file):
             y_pred_np = y_pred_np.transpose(1, 0)
             
             y_pred_np = cv2.resize(y_pred_np, (h, w), cv2.INTER_CUBIC)
-            y_pred_np = np.round(y_pred_np).astype(np.uint8)
+            #y_pred_np = np.round(y_pred_np).astype(np.uint8)
             
             
         else:
@@ -124,6 +124,7 @@ def predict_central_focus(image, out_file):
         epi_label_pred.append(np.expand_dims(y_pred_np, axis=-1))
         
     epi_label_pred = np.concatenate(epi_label_pred, axis=-1)
+    epi_label_pred = np.round(epi_label_pred)
     
     img = nib.Nifti1Image(epi_label_pred, affine=None)
     img.to_filename(out_file)

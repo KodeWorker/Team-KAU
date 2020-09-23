@@ -6,26 +6,31 @@ from pytorch_two_stage_feature_generation import predict
 from aidea_btsc import dice_score
 import glob
 import numpy as np
+from tqdm import tqdm
 
 if __name__ == "__main__":
 
     #raw_validation_image_folder = r"D:\Datasets\Brain Tumor Segmentation Challenge\test\n4"
     raw_validation_image_folder = r"D:\Datasets\Brain Tumor Segmentation Challenge\data\validation\n4"
     
-    prediction_folder = "./predictions(validation)/2-stage-224-2d-n4-unet32"
+    prob_folder = "./predictions(validation)/2-stage-224-2d-n4-unet32"
+    label_folder = "./predictions/2-stage-224-2d-n4-unet32"
     
-    if not os.path.exists(prediction_folder):
-        os.makedirs(prediction_folder)
+    if not os.path.exists(prob_folder):
+        os.makedirs(prob_folder)
+    if not os.path.exists(label_folder):
+        os.makedirs(label_folder)
     
     validation_images = glob.glob(os.path.join(raw_validation_image_folder, "*.nii.gz"))
     #validation_labels = glob.glob(os.path.join(raw_validation_label_folder, "*.nii.gz"))
     
     scores = []
     #for image, label in zip(validation_images, validation_labels):
-    for image in validation_images:
-        out_file = os.path.join(prediction_folder, os.path.basename(image))
+    for image in tqdm(validation_images):
+        out_prob = os.path.join(prob_folder, os.path.basename(image))
+        out_label = os.path.join(label_folder, os.path.basename(image))
         #predict_central_focus(image, out_file)
-        predict(image, out_file)
+        predict(image, out_prob, out_label)
         #score_ = dice_score(out_file, label)
         #scores.append(score_)
     

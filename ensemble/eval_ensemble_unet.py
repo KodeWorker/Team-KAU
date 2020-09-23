@@ -14,7 +14,7 @@ if __name__ == "__main__":
     out_channels = 1
     init_features = 64
     weights = "../weights/ensemble_unet64.pt"
-    output_dir = "./results/unet64"
+    output_dir = "./results/unet64_prob_exam"
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -59,7 +59,8 @@ if __name__ == "__main__":
             
             feature_list = []
             for model, cube in features.items():
-                feature_list.append(np.expand_dims(cv2.resize(cube[..., n_slice]*score[model]/np.sum(list(score.values())), (image_size, image_size), cv2.INTER_CUBIC), axis=0))
+                #feature_list.append(np.expand_dims(cv2.resize(cube[..., n_slice]*score[model]/np.sum(list(score.values())), (image_size, image_size), cv2.INTER_CUBIC), axis=0))
+                feature_list.append(np.expand_dims(cv2.resize(cube[..., n_slice]*score[model], (image_size, image_size), cv2.INTER_CUBIC), axis=0))
             
             x = torch.from_numpy(np.concatenate(feature_list, axis=0))
             x = torch.unsqueeze(x, 0)
@@ -67,16 +68,16 @@ if __name__ == "__main__":
             y = unet(x.to(device, dtype=torch.float))
             y_np = torch.squeeze(y).detach().cpu().numpy()
             y_np = cv2.resize(y_np, (h, w), cv2.INTER_CUBIC)
+            #y_np = np.round(y_np).astype(np.int)
             y_pred.append(np.expand_dims(y_np, axis=-1))
         
         y_pred = np.concatenate(y_pred, axis=-1)
-        y_pred =  (y_pred - np.min(y_pred)) / (np.max(y_pred) - np.min(y_pred))
+        #y_pred =  (y_pred - np.min(y_pred)) / (np.max(y_pred) - np.min(y_pred))
         
-        print(filename)
-        print(np.sum(y_pred >= 0.5))
-        #out_file = os.path.join(output_dir, filename)
-        #img = nib.Nifti1Image(y_pred, affine=None)
-        #img.to_filename(out_file)
+        #print(np.sum(y_pred >= 0.5))
+        out_file = os.path.join(output_dir, filename)
+        img = nib.Nifti1Image(y_pred, affine=None)
+        img.to_filename(out_file)
         
-        break
+        #break
             

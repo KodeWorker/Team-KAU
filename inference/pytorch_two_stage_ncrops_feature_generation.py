@@ -31,7 +31,7 @@ def reconstruct_label(five_crops, h, w):
     
     return output
 
-def predict(image, out_file):
+def predict(image, out_prob, out_label=None):
     
     in_channels = 3
     out_channels = 1
@@ -84,7 +84,8 @@ def predict(image, out_file):
     no_brain = []
     
     # stage one
-    for n_slice in trange(epi_image_data.shape[-1]):
+    #for n_slice in trange(epi_image_data.shape[-1]):
+    for n_slice in range(epi_image_data.shape[-1]):    
         input_image = epi_image_data[..., n_slice]
         
         x = nobrainer_transform(Image.fromarray(input_image.transpose(1, 0, 2)))
@@ -112,7 +113,8 @@ def predict(image, out_file):
     
     
     # stage two
-    for n_slice in trange(epi_image_data.shape[-1]):
+    #for n_slice in trange(epi_image_data.shape[-1]):
+    for n_slice in range(epi_image_data.shape[-1]):
      
         if no_brain[n_slice] == labels_map["brain"]:
         
@@ -132,8 +134,12 @@ def predict(image, out_file):
             
         epi_label_pred.append(np.expand_dims(y_pred_np, axis=-1))
         
-    epi_label_pred = np.concatenate(epi_label_pred, axis=-1)
+    epi_label_prob = np.concatenate(epi_label_pred, axis=-1)
+    epi_label_prediction = np.round(epi_label_prob)
     
-    print("nobrain count: {:d}".format(np.sum(no_brain)))
-    img = nib.Nifti1Image(epi_label_pred, affine=None)
-    img.to_filename(out_file)
+    #print("nobrain count: {:d}".format(np.sum(no_brain)))
+    img = nib.Nifti1Image(epi_label_prob, affine=None)
+    img.to_filename(out_prob)
+    
+    img = nib.Nifti1Image(epi_label_prediction, affine=None)
+    img.to_filename(out_label)

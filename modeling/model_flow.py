@@ -66,7 +66,10 @@ if __name__ == "__main__":
     train_folder_path = args.train_folder
     valid_folder_path = args.validation_folder
     pretrained_model_path = args.pretrained_model
-
+    
+    if not os.path.exists(weights):
+        os.makedirs(weights)
+    
     device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
     
     tra_transforms = transforms.Compose([
