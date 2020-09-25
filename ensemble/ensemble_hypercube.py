@@ -45,7 +45,7 @@ if __name__ == "__main__":
     filenames = glob.glob(os.path.join(feature_dir, model_list[0], "*.nii.gz"))
     filenames = [os.path.basename(filename) for filename in filenames]
     
-    total_possitive = []
+    total_positive = []
     total_negative = []
     
     for i, filename in tqdm(enumerate(filenames)):
@@ -62,6 +62,7 @@ if __name__ == "__main__":
         
         # Gethering possitive cases
         #zero_count = 0
+        
         positive_features = []
         indices = np.argwhere(label_cube == 1)
         for index in indices:
@@ -71,24 +72,36 @@ if __name__ == "__main__":
             if np.sum(hypercube>=prob_lb) != 0: # reject hybercube which cannot be predict
                 #zero_count += 1
                 positive_features += [hypercube.flatten()]
-                
+               
         # Gethering negative cases
-        num_possitive_cases = len(possitive_features)
+        num_positive_cases = len(positive_features)
         negative_features = []
+                
         indices = np.argwhere(label_cube == 0)
         random.shuffle(indices)
-        for index in indices[:num_possitive_cases]:
-            cubes = [np.expand_dims(crop_cube(cube, index, cube_size), axis=0) for cube in feature_cubes]
-            hypercube = np.concatenate(cubes, axis=0)
+        x, y, z = label_cube.shape[0], label_cube.shape[1], label_cube.shape[2]
+        n_count = 0
+        for index in indices:
             
-            negative_features += [hypercube.flatten()]
-        
+            if (index[0] - cube_size//2) > 0 and (index[0] + cube_size//2 + 1) < x and\
+               (index[1] - cube_size//2) > 0 and (index[1] + cube_size//2 + 1) < y and\
+               (index[2] - cube_size//2) > 0 and (index[2] + cube_size//2 + 1) < z :
+               
+                cubes = [np.expand_dims(crop_cube(cube, index, cube_size), axis=0) for cube in feature_cubes]
+                hypercube = np.concatenate(cubes, axis=0)
+                
+                negative_features += [hypercube.flatten()]
+                n_count += 1
+                
+                if n_count >= num_positive_cases:
+                    break
+            
         total_positive += positive_features
         total_negative += negative_features
         
     total_positive = np.array(total_positive)
     total_negative = np.array(total_negative)
     
-    np.save(os.path.join(output_dir, "positive.npy"), total_possitive)
+    np.save(os.path.join(output_dir, "positive.npy"), total_positive)
     np.save(os.path.join(output_dir, "negative.npy"), total_negative)
     

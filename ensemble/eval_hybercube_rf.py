@@ -5,6 +5,7 @@ import os
 from tqdm import tqdm
 import glob
 import nibabel as nib
+import cv2
 
 def crop_cube(cube, index, cube_size):
 
@@ -35,7 +36,7 @@ if __name__ == "__main__":
     filenames = glob.glob(os.path.join(feature_dir, model_list[0], "*.nii.gz"))
     filenames = [os.path.basename(filename) for filename in filenames]
     
-    #rf = load(model_path)
+    rf = load(model_path)
     
     for i, filename in tqdm(enumerate(filenames)):
         
@@ -72,9 +73,12 @@ if __name__ == "__main__":
         X = np.array(features)
         y = rf.predict(X)
         
-        true_indices = sel_indices[y >= threshold]
+        true_indices = np.array(sel_indices)[y >= threshold]
         for true_index in true_indices:
             label_cube[true_index] = 1
+        
+        for n_slice in range(label_cube.shape[-1]):
+            cv2.imwrite(os.path.join(output_dir, "{}_{}.jpg".format(filename.replace(".nii.gz", ""), n_slice)), label_cube[..., n_slice]*255)
         
         output_file_path = os.path.join(output_dir, filename)
         img = nib.Nifti1Image(label_cube, affine=None)

@@ -9,12 +9,12 @@ import cv2
 
 if __name__ == "__main__":
     
-    feature_dir = "./predictions(test)"
+    feature_dir = "../predictions(test)"
     image_size = 256
     out_channels = 1
     init_features = 64
-    weights = "../weights/ensemble_unet64.pt"
-    output_dir = "./results/unet64_prob_exam"
+    weights = "../../weights/ensemble_unet64.pt"
+    output_dir = "./results/unet64"
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -72,6 +72,7 @@ if __name__ == "__main__":
             y_pred.append(np.expand_dims(y_np, axis=-1))
         
         y_pred = np.concatenate(y_pred, axis=-1)
+        y_pred = np.round(y_pred)
         #y_pred =  (y_pred - np.min(y_pred)) / (np.max(y_pred) - np.min(y_pred))
         
         #print(np.sum(y_pred >= 0.5))

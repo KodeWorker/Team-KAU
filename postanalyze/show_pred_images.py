@@ -10,9 +10,9 @@ if __name__ == "__main__":
     raw_image_dir = r"D:\Datasets\Brain Tumor Segmentation Challenge\test\image"
     
     prediction_dir = r"./prediction"
-    predictions = ["2-stage-224-2d-unet32", "2-stage-256-2d-unet64", "128-3d-unet16", "128-3d-unet16-pretrained"]
+    predictions = ["union"]
     
-    fig_dir = "./fig/20200921"
+    fig_dir = "./fig/20200924"
     
     images = glob.glob(os.path.join(raw_image_dir, "*.nii.gz"))
     
@@ -32,7 +32,7 @@ if __name__ == "__main__":
             pred_mask = nib.load(value)
             y_pred_dict[key] = pred_mask.get_fdata()
         
-        fig_row, fig_col = 2, 3
+        fig_row, fig_col = 1, 2
         for n_slice in range(x_true.shape[-1]):
         
             xn = x_true[...,n_slice].transpose(1,0)
@@ -43,8 +43,10 @@ if __name__ == "__main__":
             
             fig, ax = plt.subplots(fig_row, fig_col, figsize=(8,8))
     
-            ax[0][0].set_title("origin")
-            ax[0][0].imshow(xn, alpha=1.0)
+            #ax[0][0].set_title("origin")
+            #ax[0][0].imshow(xn, alpha=1.0)
+            ax[0].set_title("origin")
+            ax[0].imshow(xn, alpha=1.0)
             
             ###
             y_pred_dict_ = {key: value[...,n_slice].transpose(1,0) * 255 for key, value in y_pred_dict.items()}
@@ -55,11 +57,15 @@ if __name__ == "__main__":
                 j = (ind % (fig_col -1)) + 1 # first col for origin
                 i = ind // (fig_col -1)
                 
-                ax[i][j].set_title(key)
-                ax[i][j].imshow(value, alpha=0.8, cmap=plt.cm.get_cmap("Reds"))
-                ax[i][j].imshow(xn, alpha=0.3)
-                for i in range(1, fig_row):
-                    ax[i][0].axis('off')
+                #ax[i][j].set_title(key)
+                #ax[i][j].imshow(value, alpha=0.8, cmap=plt.cm.get_cmap("Reds"))
+                #ax[i][j].imshow(xn, alpha=0.3)
+                #for i in range(1, fig_row):
+                #    ax[i][0].axis('off')
+                
+                ax[j].set_title(key)
+                ax[j].imshow(value, alpha=0.8, cmap=plt.cm.get_cmap("Reds"))
+                ax[j].imshow(xn, alpha=0.3)
             ###
             
             filename = os.path.join(fig_dir, name, "{:04d}.jpg".format(n_slice))

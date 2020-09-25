@@ -2,6 +2,7 @@ from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 from joblib import dump
 import random
+import os
 
 if __name__ == "__main__":
 
@@ -27,4 +28,3 @@ if __name__ == "__main__":
     rf.fit(X, y)
     
     dump(rf, model_path)
-    
